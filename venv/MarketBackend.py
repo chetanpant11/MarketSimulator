@@ -37,11 +37,11 @@ class dbHelper():
         print(f"details of customerID {uid} Deleted!!!!!!!!")
 
     def fetchAllCustomers(self):
-        sql = "select * from Customer order by name desc"
+        sql = "select * from Customer order by cid asc"
 
         cursor.execute(sql)
         rows = cursor.fetchall()
-        print(rows)
+        return rows
 
     def fetchCustomer(self, uid):
         sql = "select * from Customer where uid = {}".format(uid)
@@ -60,33 +60,33 @@ class dbHelper():
         r1 = int(row[0])
         return r1
 
-    def updatelp(self,abc):
+    def updatelp(self,customer,uid):
 
-        sql="update customer set lp={} where uid = {}".format(abc.lp,uid)
+        sql="update customer set lp={} where uid = {}".format(customer.lp,uid)
         cursor.execute(sql)
         con.commit()
 
-    def fetchLp(self):
+    def fetchLp(self,uid):
         lp1 = "select lp from customer where uid='{}'".format(uid)
         cursor.execute(lp1)
         result = cursor.fetchone()
         previousLp = int(result[0])
         return previousLp
 
-    def manipulateLP(self,cost):
+    def manipulateLP(self,cRef,cost,uid):
 
-
+        db = dbHelper()
         if cost >= 500 and cost < 1000:
             if cRef.lp >=100:
                 cost = cost-100
                 cRef.lp = cRef.lp-100
-                db.updatelp(cRef)
+                db.updatelp(cRef,uid)
                 return cost
 
             elif cRef.lp<100:
                 cost = cost - cRef.lp
                 cRef.lp=0
-                db.updatelp(cRef)
+                db.updatelp(cRef,uid)
                 return cost
 
 
@@ -96,19 +96,22 @@ class dbHelper():
 
                 cRef.lp = cRef.lp-100 + (0.1*cost)
 
-                db.updatelp(cRef)
+                db.updatelp(cRef,uid)
                 return cost
 
             elif cRef.lp<100:
                 cost = cost - cRef.lp
                 cRef.lp = 0  + (0.1*cost)
-                db.updatelp(cRef)
+                db.updatelp(cRef,uid)
                 return cost
 
 
 
     def showCost(self,finalcost):
         print("the amount you have to pay after applying lp = ",finalcost)
+
+    def convert(self,cost):
+        return int(cost)
 
 class customer():
     def __init__(self, name, phone, email, lp,uid, Active):
@@ -124,81 +127,3 @@ class customer():
         print(f"Phone : {self.phone}")
         print(f"Email : {self.email}")
         print(f"UID =   {self.uid}")
-
-print("1.  Add Customer Details!!!")
-
-print("2. Already a Customer!!!")
-
-print("3. Show all customers")
-
-choice = int(input("Enter your Choice : "))
-cost=0
-lp1="select lp from customer "
-if choice == 1:
-
-    cRef = customer(None, None,None,100,None,1)
-    cRef.name = input("Enter name of the customer : ")
-    cRef.phone = input("Enter phone of the customer : ")
-    cRef.email = input("Enter email of the customer : ")
-    cRef.uid = random.randrange(1000,10000)
-
-
-    save = input("Do you want to save the details of the customer (yes/no): ")
-    if save == "yes":
-
-        db = dbHelper()
-        db.saveCustomerInDB(cRef)
-        print("*****CONGRATULATIONS YOU HAVE BEEN GIVEN 100 Loyalty Points*********")
-        print("")
-        cRef.showCustomerDetails()
-        #loyalty points assign
-
-#=========================================================================================
-if choice == 2:
-    uid = int(input("Enter your unique Customer id : "))
-    db = dbHelper()
-    z = db.fetch_Active_Status(uid)
-
-    if z == 1:
-        print("1.  Update Customer Details!!")
-        print("2. Delete the customer Details")
-        print("3. Shopping")
-
-        second_choice = int(input("Enter your Second Choice: "))
-
-        if second_choice == 1:
-            db = dbHelper()
-
-            cRef = customer(None, None, None, None, None, None)
-            db.fetchCustomer(uid)
-            cRef.name = input("Enter name of the customer : ")
-            cRef.phone = input("Enter phone of the customer : ")
-            cRef.email = input("Enter email of the customer : ")
-
-            save = input("Do you want to update the details (yes/no): ")
-            if save == "yes":
-                db = dbHelper()
-                db.updateCustomerInDB(cRef,uid)
-
-        if second_choice == 2:
-
-            cRef = customer(None, None, None, None, None, None)
-            cRef.Active = 0
-
-            save = input("Do you want to Delete the details (yes/no): ")
-            if save == "yes":
-                db = dbHelper()
-                db.deleteCustomerInDB(cRef, uid)
-
-        if second_choice == 3:
-            db = dbHelper()
-            previousLp=db.fetchLp()
-            cRef = customer(None, None, None, previousLp, None, None)
-            cost = int(input("Enter cost="))
-            final_cost = db.manipulateLP(cost)
-            db.showCost(final_cost)
-    else:
-        print("No customer of the entered uid exists!!!!!!!!")
-if choice == 3:
-    db = dbHelper()
-    db.fetchAllCustomers()
